@@ -147,12 +147,18 @@ class Control:
                 self.done = True
             elif event.type == pg.KEYDOWN:
                 self.keys = pg.key.get_pressed()
+                # Keep pg.SCALED when toggling fullscreen. A plain FULLSCREEN
+                # mode on macOS switches the display surface to a format with
+                # an alpha mask; every pg.Surface created afterwards (e.g. the
+                # cards built by Panel.addCard) inherits it with alpha 0 and
+                # becomes invisible. SCALED also keeps the 800x600 logical size
+                # (letterboxed) instead of a stretched 960x600 mode.
                 if event.key == pg.K_f:
                     pg.display.set_mode(
-                        c.SCREEN_SIZE, pg.HWSURFACE | pg.FULLSCREEN
+                        c.SCREEN_SIZE, pg.SCALED | pg.FULLSCREEN
                     )
                 elif event.key == pg.K_u:
-                    pg.display.set_mode(c.SCREEN_SIZE)
+                    pg.display.set_mode(c.SCREEN_SIZE, pg.SCALED)
             elif event.type == pg.KEYUP:
                 self.keys = pg.key.get_pressed()
             elif event.type == pg.MOUSEBUTTONDOWN:
