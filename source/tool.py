@@ -7,6 +7,7 @@ import pygame as pg
 from pygame.locals import *
 
 from . import constants as c
+from . import hd
 
 logger = logging.getLogger('main')
 
@@ -57,7 +58,7 @@ class State:
 # 进行游戏控制 循环 事件响应
 class Control:
     def __init__(self):
-        self.screen = pg.display.get_surface()
+        self.screen = DISPLAY.screen
         self.done = False
         self.clock = pg.time.Clock()    # 创建一个对象来帮助跟踪时间
         self.keys = pg.key.get_pressed()
@@ -147,18 +148,10 @@ class Control:
                 self.done = True
             elif event.type == pg.KEYDOWN:
                 self.keys = pg.key.get_pressed()
-                # Keep pg.SCALED when toggling fullscreen. A plain FULLSCREEN
-                # mode on macOS switches the display surface to a format with
-                # an alpha mask; every pg.Surface created afterwards (e.g. the
-                # cards built by Panel.addCard) inherits it with alpha 0 and
-                # becomes invisible. SCALED also keeps the 800x600 logical size
-                # (letterboxed) instead of a stretched 960x600 mode.
                 if event.key == pg.K_f:
-                    pg.display.set_mode(
-                        c.SCREEN_SIZE, pg.SCALED | pg.FULLSCREEN
-                    )
+                    DISPLAY.set_fullscreen(True)
                 elif event.key == pg.K_u:
-                    pg.display.set_mode(c.SCREEN_SIZE, pg.SCALED)
+                    DISPLAY.set_fullscreen(False)
             elif event.type == pg.KEYUP:
                 self.keys = pg.key.get_pressed()
             elif event.type == pg.MOUSEBUTTONDOWN:
@@ -166,7 +159,8 @@ class Control:
                 # a fast click (or trackpad tap) delivers DOWN and UP in the
                 # same frame, so the button is already released when polled
                 # and the click would be lost.
-                self.mouse_pos = event.pos
+                # event.pos is in window space; map it to logical 800x600
+                self.mouse_pos = DISPLAY.to_logical(event.pos)
                 if event.button == 1:   # left button
                     self.mouse_click[0] = True
                 elif event.button == 3:   # right button
@@ -180,48 +174,55 @@ class Control:
         while not self.done:
             self.event_loop()
             self.update()
-            pg.display.update()
+            DISPLAY.present()
             self.clock.tick(self.fps)
 
 
 def get_image(
-    sheet: pg.Surface,
+    sheet: hd.HDSurface,
     x: int,
     y: int,
     width: int,
     height: int,
     colorkey: tuple[int] = c.BLACK,
     scale: int = 1,
-) -> pg.Surface:
+) -> hd.HDSurface:
     # 不保留alpha通道的图片导入
-    image = pg.Surface([width, height])
+    image = hd.Surface((width, height))
     rect = image.get_rect()
 
+    if colorkey:
+        # HD assets carry real alpha; pre-fill with the colour key so that
+        # transparent source pixels end up keyed out instead of black.
+        image.fill(colorkey)
     image.blit(sheet, (0, 0), (x, y, width, height))
     if colorkey:
         image.set_colorkey(colorkey)
-    image = pg.transform.scale(
+    image = hd.scale(
         image, (int(rect.width * scale), int(rect.height * scale))
     )
     return image
 
 
 def get_image_alpha(
-    sheet: pg.Surface,
+    sheet: hd.HDSurface,
     x: int,
     y: int,
     width: int,
     height: int,
     colorkey: tuple[int] = c.BLACK,
     scale: int = 1,
-) -> pg.Surface:
+) -> hd.HDSurface:
     # 保留alpha通道的图片导入
-    image = pg.Surface([width, height], SRCALPHA)
+    image = hd.Surface((width, height), SRCALPHA)
     rect = image.get_rect()
 
     image.blit(sheet, (0, 0), (x, y, width, height))
-    image.set_colorkey(colorkey)
-    image = pg.transform.scale(
+    if not sheet.get_flags() & SRCALPHA:
+        # Only key colours on sources without real alpha; keying a source
+        # that has alpha would punch holes in genuinely black pixels.
+        image.set_colorkey(colorkey)
+    image = hd.scale(
         image, (int(rect.width * scale), int(rect.height * scale))
     )
     return image
@@ -229,7 +230,7 @@ def get_image_alpha(
 
 def load_image_frames(
     directory: str, image_name: str, colorkey: tuple[int], accept: tuple[str]
-) -> list[pg.Surface]:
+) -> list[hd.HDSurface]:
     frame_list = []
     tmp = {}
     # image_name is "Peashooter", pic name is "Peashooter_1", get the index 1
@@ -239,7 +240,7 @@ def load_image_frames(
         name, ext = os.path.splitext(pic)
         if ext.lower() in accept:
             index = int(name[index_start:])
-            img = pg.image.load(os.path.join(directory, pic))
+            img = hd.load_image(os.path.join(directory, pic))
             if img.get_alpha():
                 img = img.convert_alpha()
             else:
@@ -258,7 +259,7 @@ def load_all_gfx(
     directory: str,
     colorkey: tuple[int] = c.WHITE,
     accept: tuple[str] = ('.png', '.jpg', '.bmp', '.gif', '.webp'),
-) -> dict[str : pg.Surface]:
+) -> dict[str, hd.HDSurface | list[hd.HDSurface]]:
     graphics = {}
     for name1 in os.listdir(directory):
         # subfolders under the folder resources\graphics
@@ -288,7 +289,7 @@ def load_all_gfx(
                     # e.g. pics under the folder resources\graphics\Screen
                     name, ext = os.path.splitext(name2)
                     if ext.lower() in accept:
-                        img = pg.image.load(dir2)
+                        img = hd.load_image(dir2)
                         if img.get_alpha():
                             img = img.convert_alpha()
                         else:
@@ -298,12 +299,13 @@ def load_all_gfx(
     return graphics
 
 
-pg.display.set_caption(c.ORIGINAL_CAPTION)  # 设置标题
-SCREEN = pg.display.set_mode(c.SCREEN_SIZE, pg.SCALED)   # 设置初始屏幕
+# 创建窗口与 GPU 呈现器；逻辑分辨率 800x600，实际按 RENDER_SCALE 倍绘制
+DISPLAY = hd.Display(c.ORIGINAL_CAPTION, c.SCREEN_SIZE)
+SCREEN = DISPLAY.screen
 pg.mixer.set_num_channels(255)  # 设置可以同时播放的音频数量，默认为8，经常不够用
 if os.path.exists(
     c.ORIGINAL_LOGO
 ):    # 设置窗口图标，仅对非Nuitka时生效，Nuitka不需要包括额外的图标文件，自动跳过这一过程即可
-    pg.display.set_icon(pg.image.load(c.ORIGINAL_LOGO))
+    DISPLAY.set_icon(c.ORIGINAL_LOGO)
 
-GFX = load_all_gfx(c.PATH_IMG_DIR)
+GFX = load_all_gfx(hd.hd_image_dir())

@@ -5,6 +5,7 @@ import random
 import pygame as pg
 
 from .. import constants as c
+from .. import hd
 from .. import tool
 from ..component import map, menubar, plant, zombie
 
@@ -40,14 +41,14 @@ class Level(tool.State):
         if self.game_info[c.GAME_MODE] == c.MODE_ADVENTURE:
             if 0 <= self.game_info[c.LEVEL_NUM] < map.TOTAL_LEVEL:
                 self.map_data = map.LEVEL_MAP_DATA[self.game_info[c.LEVEL_NUM]]
-                pg.display.set_caption(
+                tool.DISPLAY.set_caption(
                     f'pypvz: 冒险模式 {self.map_data[c.GAME_TITLE]}'
                 )
             else:
                 self.game_info[c.LEVEL_NUM] = 1
                 self.saveUserData()
                 self.map_data = map.LEVEL_MAP_DATA[self.game_info[c.LEVEL_NUM]]
-                pg.display.set_caption(
+                tool.DISPLAY.set_caption(
                     f'pypvz: 冒险模式 {self.map_data[c.GAME_TITLE]}'
                 )
                 logger.warning('关卡数设定错误！进入默认的第一关！\n')
@@ -57,7 +58,7 @@ class Level(tool.State):
                 self.map_data = map.LITTLE_GAME_MAP_DATA[
                     self.game_info[c.LITTLEGAME_NUM]
                 ]
-                pg.display.set_caption(
+                tool.DISPLAY.set_caption(
                     f'pypvz: 玩玩小游戏 {self.map_data[c.GAME_TITLE]}'
                 )
             else:
@@ -66,7 +67,7 @@ class Level(tool.State):
                 self.map_data = map.LITTLE_GAME_MAP_DATA[
                     self.game_info[c.LITTLEGAME_NUM]
                 ]
-                pg.display.set_caption(
+                tool.DISPLAY.set_caption(
                     f'pypvz: 冒险模式 {self.map_data[c.GAME_TITLE]}'
                 )
                 logger.warning('关卡数设定错误！进入默认的第一关！\n')
@@ -106,7 +107,7 @@ class Level(tool.State):
         self.background = tool.GFX[c.BACKGROUND_NAME][img_index]
         self.bg_rect = self.background.get_rect()
 
-        self.level = pg.Surface((self.bg_rect.w, self.bg_rect.h)).convert()
+        self.level = hd.Surface((self.bg_rect.w, self.bg_rect.h)).convert()
         self.viewport = tool.SCREEN.get_rect(bottom=self.bg_rect.bottom)
         self.viewport.x += c.BACKGROUND_OFFSET_X
 
@@ -638,12 +639,12 @@ class Level(tool.State):
 
         # 返回按钮，用字体渲染实现，增强灵活性
         # 建立一个按钮大小的surface对象
-        self.return_button = pg.Surface((376, 96))
+        self.return_button = hd.Surface((376, 96))
         self.return_button.set_colorkey(c.BLACK)    # 避免多余区域显示成黑色
         self.return_button_rect = self.return_button.get_rect()
         self.return_button_rect.x = 220
         self.return_button_rect.y = 440
-        font = pg.font.Font(c.FONT_PATH, 40)
+        font = hd.Font(c.FONT_PATH, 40)
         font.bold = True
         text = font.render('返回游戏', True, c.YELLOWGREEN)
         text_rect = text.get_rect()
@@ -671,7 +672,7 @@ class Level(tool.State):
 
         # 音量+、音量-
         frame_rect = (0, 0, 39, 41)
-        font = pg.font.Font(c.FONT_PATH, 35)
+        font = hd.Font(c.FONT_PATH, 35)
         font.bold = True
         # 音量+
         self.sound_volume_plus_button = tool.get_image_alpha(
@@ -1140,7 +1141,7 @@ class Level(tool.State):
     # 先判断位置是否合法 isValid(map_x, map_y)
     # 再判断位置是否可用 isMovable(map_x, map_y)
     def canSeedPlant(self, plant_name):
-        x, y = pg.mouse.get_pos()
+        x, y = tool.DISPLAY.mouse_pos()
         return self.map.checkPlantToSeed(x, y, plant_name)
 
     # 种植物
@@ -1296,7 +1297,7 @@ class Level(tool.State):
             ):
                 return
             width, height = self.mouse_rect.w, self.mouse_rect.h
-            image = pg.Surface([width, height])
+            image = hd.Surface([width, height])
             image.blit(self.mouse_image, (0, 0), (0, 0, width, height))
             image.set_colorkey(c.BLACK)
             image.set_alpha(128)
@@ -1955,13 +1956,13 @@ class Level(tool.State):
     def drawMouseShow(self, surface):
         if self.hint_plant:
             surface.blit(self.hint_image, self.hint_rect)
-        x, y = pg.mouse.get_pos()
+        x, y = tool.DISPLAY.mouse_pos()
         self.mouse_rect.centerx = x
         self.mouse_rect.centery = y
         surface.blit(self.mouse_image, self.mouse_rect)
 
     def drawMouseShowPlus(self, surface):   # 拖动铲子时的显示
-        x, y = pg.mouse.get_pos()
+        x, y = tool.DISPLAY.mouse_pos()
         self.shovel_rect.centerx = x
         self.shovel_rect.centery = y
         # 铲子接近植物时会高亮提示
@@ -2021,7 +2022,7 @@ class Level(tool.State):
             9,
         )
         # 画填充的进度条
-        pg.draw.rect(surface, c.YELLOWGREEN, filled_bar_rect)
+        hd.draw_rect(surface, c.YELLOWGREEN, filled_bar_rect)
 
         # 画旗帜
         for i in range(self.num_flags):
@@ -2067,7 +2068,7 @@ class Level(tool.State):
 
         # 显示当前音量
         # 由于音量可变，因此这一内容不能在一开始就结束加载，而应当不断刷新不断显示
-        font = pg.font.Font(c.FONT_PATH, 30)
+        font = hd.Font(c.FONT_PATH, 30)
         volume_tips = font.render(
             f'音量：{round(self.game_info[c.SOUND_VOLUME]*100):3}%',
             True,

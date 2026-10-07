@@ -50,8 +50,15 @@ uv sync
 
 或者参考：
 
-* `Python3` （建议 >= 3.10，最好使用最新版）
-* `Python-Pygame` （建议 >= 2.0，最好使用最新版）
+* `Python3` （建议 >= 3.12）
+* `pygame-ce` （>= 2.5.8，注意是 pygame-ce 而非 pygame，二者不能共存）
+
+### 高清渲染
+
+游戏逻辑分辨率仍为 800x600，但默认按 2 倍（1600x1200）绘制并通过 GPU 呈现，在 HiDPI/Retina 屏幕上可获得清晰画面：
+
+* `resources/graphics_hd/` 为由 Real-ESRGAN（`realesr-animevideov3` 模型）超分生成的 2 倍分辨率资源，目录结构与 `resources/graphics/` 一一对应
+* 设置环境变量 `PYPVZ_RENDER_SCALE=1` 可回退到原始资源与分辨率
 
 ## 开始游戏
 

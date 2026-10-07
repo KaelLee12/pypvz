@@ -4,6 +4,7 @@ from abc import abstractmethod
 import pygame as pg
 
 from .. import constants as c
+from .. import hd
 from .. import tool
 
 
@@ -35,7 +36,7 @@ class Screen(tool.State):
         )
         self.main_menu_button_image_rect.x = 620
         ### 主菜单按钮上的文字
-        font = pg.font.Font(c.FONT_PATH, 18)
+        font = hd.Font(c.FONT_PATH, 18)
         main_menu_text = font.render('主菜单', True, c.NAVYBLUE)
         main_menu_text_rect = main_menu_text.get_rect()
         main_menu_text_rect.x = 29
@@ -91,7 +92,7 @@ class GameVictoryScreen(Screen):
         self.persist = persist
         self.game_info = persist
         self.setupImage(self.image_name)
-        pg.display.set_caption('pypvz: 战斗胜利！')
+        tool.DISPLAY.set_caption('pypvz: 战斗胜利！')
         pg.mixer.music.stop()
         pg.mixer.music.load(os.path.join(c.PATH_MUSIC_DIR, 'zenGarden.opus'))
         pg.mixer.music.play(-1, 0)
@@ -108,7 +109,7 @@ class GameLoseScreen(Screen):
         self.persist = persist
         self.game_info = persist
         self.setupImage(self.image_name, (-118, -40, 800, 600), c.WHITE)
-        pg.display.set_caption('pypvz: 战斗失败！')
+        tool.DISPLAY.set_caption('pypvz: 战斗失败！')
         # 停止播放原来关卡中的音乐
         pg.mixer.music.stop()
 
@@ -129,7 +130,7 @@ class AwardScreen(tool.State):
 
         # 文字
         # 标题处文字
-        font = pg.font.Font(c.FONT_PATH, 37)
+        font = hd.Font(c.FONT_PATH, 37)
         title_text = font.render('您获得了新的战利品！', True, c.PARCHMENT_YELLOW)
         title_text_rect = title_text.get_rect()
         title_text_rect.x = 220
@@ -149,7 +150,7 @@ class AwardScreen(tool.State):
             self.main_menu_button_image_rect.x = 343
             self.main_menu_button_image_rect.y = 520
             ### 主菜单按钮上的文字
-            font = pg.font.Font(c.FONT_PATH, 18)
+            font = hd.Font(c.FONT_PATH, 18)
             main_menu_text = font.render('主菜单', True, c.NAVYBLUE)
             main_menu_text_rect = main_menu_text.get_rect()
             main_menu_text_rect.x = 29
@@ -184,7 +185,7 @@ class AwardScreen(tool.State):
             self.image.blit(sunflower_trophy_image, sunflower_trophy_rect)
 
             # 绘制介绍标题
-            font = pg.font.Font(c.FONT_PATH, 22)
+            font = hd.Font(c.FONT_PATH, 22)
             intro_title_img = font.render(
                 intro_title, True, c.PARCHMENT_YELLOW
             )
@@ -194,7 +195,7 @@ class AwardScreen(tool.State):
             self.image.blit(intro_title_img, intro_title_rect)
 
             # 绘制介绍内容
-            font = pg.font.Font(c.FONT_PATH, 15)
+            font = hd.Font(c.FONT_PATH, 15)
             intro_content_img = font.render(intro_content, True, c.NAVYBLUE)
             intro_content_rect = intro_content_img.get_rect()
             intro_content_rect.x = 290
@@ -208,7 +209,7 @@ class AwardScreen(tool.State):
             self.next_button_image_rect = self.next_button_image.get_rect()
             self.next_button_image_rect.x = 70
             ### 继续按钮上的文字
-            font = pg.font.Font(c.FONT_PATH, 18)
+            font = hd.Font(c.FONT_PATH, 18)
             next_text = font.render('继续', True, c.NAVYBLUE)
             next_text_rect = next_text.get_rect()
             next_text_rect.x = 37
@@ -249,7 +250,7 @@ class AwardScreen(tool.State):
         else:
             self.show_only_one_option = True
         self.setupImage()
-        pg.display.set_caption('pypvz: 您获得了新的战利品！')
+        tool.DISPLAY.set_caption('pypvz: 您获得了新的战利品！')
         pg.mixer.music.stop()
         pg.mixer.music.load(os.path.join(c.PATH_MUSIC_DIR, 'zenGarden.opus'))
         pg.mixer.music.play(-1, 0)
@@ -277,7 +278,7 @@ class HelpScreen(tool.State):
         self.persist = persist
         self.game_info = persist
         self.setupImage()
-        pg.display.set_caption('pypvz: 帮助')
+        tool.DISPLAY.set_caption('pypvz: 帮助')
         pg.mixer.music.stop()
         c.SOUND_HELP_SCREEN.play()
 
@@ -302,7 +303,7 @@ class HelpScreen(tool.State):
         self.main_menu_button_image_rect.x = 343
         self.main_menu_button_image_rect.y = 500
         ### 主菜单按钮上的文字
-        font = pg.font.Font(c.FONT_PATH, 18)
+        font = hd.Font(c.FONT_PATH, 18)
         main_menu_text = font.render('主菜单', True, c.NAVYBLUE)
         main_menu_text_rect = main_menu_text.get_rect()
         main_menu_text_rect.x = 29

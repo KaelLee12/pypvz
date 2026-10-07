@@ -3,6 +3,7 @@ import random
 import pygame as pg
 
 from .. import constants as c
+from .. import hd
 from .. import tool
 
 
@@ -30,7 +31,7 @@ class Zombie(pg.sprite.Sprite):
 
         self.image = self.frames[self.frame_index]
         self.rect = self.image.get_rect()
-        self.mask = pg.mask.from_surface(self.image)
+        self.mask = hd.mask_from_surface(self.image)
         self.rect.x = x
         self.rect.bottom = y
         # 大蒜换行移动像素值，< 0时向上，= 0时不变，> 0时向上
@@ -329,7 +330,7 @@ class Zombie(pg.sprite.Sprite):
         bottom = self.rect.bottom
         centerx = self.rect.centerx
         self.image = self.frames[self.frame_index]
-        self.mask = pg.mask.from_surface(self.image)
+        self.mask = hd.mask_from_surface(self.image)
         self.rect = self.image.get_rect()
         self.rect.bottom = bottom
         self.rect.centerx = centerx
@@ -352,8 +353,8 @@ class Zombie(pg.sprite.Sprite):
 
         self.image = self.frames[self.frame_index]
         if self.is_hypno:
-            self.image = pg.transform.flip(self.image, True, False)
-        self.mask = pg.mask.from_surface(self.image)
+            self.image = hd.flip(self.image, True, False)
+        self.mask = hd.mask_from_surface(self.image)
         if (self.current_time - self.hit_timer) >= 200:
             self.image.set_alpha(255)
         else:
@@ -886,8 +887,8 @@ class NewspaperZombie(Zombie):
 
         self.image = self.frames[self.frame_index]
         if self.is_hypno:
-            self.image = pg.transform.flip(self.image, True, False)
-        self.mask = pg.mask.from_surface(self.image)
+            self.image = hd.flip(self.image, True, False)
+        self.mask = hd.mask_from_surface(self.image)
         if (self.current_time - self.hit_timer) >= 200:
             self.image.set_alpha(255)
         else:
@@ -1293,8 +1294,8 @@ class PoleVaultingZombie(Zombie):
 
         self.image = self.frames[self.frame_index]
         if self.is_hypno:
-            self.image = pg.transform.flip(self.image, True, False)
-        self.mask = pg.mask.from_surface(self.image)
+            self.image = hd.flip(self.image, True, False)
+        self.mask = hd.mask_from_surface(self.image)
         if (self.current_time - self.hit_timer) >= 200:
             self.image.set_alpha(255)
         else:
@@ -1559,8 +1560,8 @@ class SnorkelZombie(Zombie):
 
         self.image = self.frames[self.frame_index]
         if self.is_hypno:
-            self.image = pg.transform.flip(self.image, True, False)
-        self.mask = pg.mask.from_surface(self.image)
+            self.image = hd.flip(self.image, True, False)
+        self.mask = hd.mask_from_surface(self.image)
 
         if (self.current_time - self.hit_timer) >= 200:
             self.image.set_alpha(255)

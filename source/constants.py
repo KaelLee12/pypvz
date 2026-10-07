@@ -22,6 +22,12 @@ else:   # 非Windows系统存储路径
 PATH_IMG_DIR = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), 'resources', 'graphics'
 )
+# 高清图片资源路径（RENDER_SCALE 倍分辨率，由 Real-ESRGAN 超分生成）
+PATH_IMG_HD_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), 'resources', 'graphics_hd'
+)
+# 渲染倍率：逻辑分辨率仍为 800x600，实际按 RENDER_SCALE 倍绘制后交给 GPU 呈现
+RENDER_SCALE = int(os.environ.get('PYPVZ_RENDER_SCALE', '2'))
 # 游戏音乐文件夹路径
 PATH_MUSIC_DIR = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), 'resources', 'music'

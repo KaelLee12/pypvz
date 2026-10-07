@@ -3,19 +3,20 @@ import random
 import pygame as pg
 
 from .. import constants as c
+from .. import hd
 from .. import tool
 
 
 def getSunValueImage(sun_value):
     # for pack, must include ttf
-    font = pg.font.Font(c.FONT_PATH, 14)
+    font = hd.Font(c.FONT_PATH, 14)
     font.bold = True
     width = 35
     msg_image = font.render(str(sun_value), True, c.NAVYBLUE, c.LIGHTYELLOW)
     msg_rect = msg_image.get_rect()
     msg_w = msg_rect.width
 
-    image = pg.Surface((width, 17))
+    image = hd.Surface((width, 17))
     x = width - msg_w
 
     image.fill(c.LIGHTYELLOW)
@@ -42,7 +43,7 @@ class Card:
         self.rect.x = x
         self.rect.y = y
         # 绘制植物阳光消耗大小
-        font = pg.font.Font(c.FONT_PATH, 12)
+        font = hd.Font(c.FONT_PATH, 12)
         self.sun_cost_img = font.render(
             str(self.info[c.SUN_INDEX]), True, c.BLACK
         )
@@ -68,7 +69,7 @@ class Card:
         self.not_recommend = not_recommend
         if self.not_recommend:
             self.orig_image.set_alpha(128)
-            self.image = pg.Surface((self.rect.w, self.rect.h))  # 黑底
+            self.image = hd.Surface((self.rect.w, self.rect.h))  # 黑底
             self.image.blit(
                 self.orig_image, (0, 0), (0, 0, self.rect.w, self.rect.h)
             )
@@ -111,7 +112,7 @@ class Card:
         if can_select:
             if self.not_recommend % 2:
                 self.orig_image.set_alpha(128)
-                self.image = pg.Surface((self.rect.w, self.rect.h))  # 黑底
+                self.image = hd.Surface((self.rect.w, self.rect.h))  # 黑底
                 self.image.blit(
                     self.orig_image, (0, 0), (0, 0, self.rect.w, self.rect.h)
                 )
@@ -120,7 +121,7 @@ class Card:
                 self.image.set_alpha(255)
         else:
             self.orig_image.set_alpha(64)
-            self.image = pg.Surface((self.rect.w, self.rect.h))  # 黑底
+            self.image = hd.Surface((self.rect.w, self.rect.h))  # 黑底
             self.image.blit(
                 self.orig_image, (0, 0), (0, 0, self.rect.w, self.rect.h)
             )
@@ -132,7 +133,7 @@ class Card:
         # 有关是否满足冷却与阳光条件的图片形式
         time = current_time - self.frozen_timer
         if time < self.frozen_time:   # cool down status
-            image = pg.Surface((self.rect.w, self.rect.h))  # 黑底
+            image = hd.Surface((self.rect.w, self.rect.h))  # 黑底
             frozen_image = self.orig_image
             frozen_image.set_alpha(128)
             frozen_height = (
@@ -149,13 +150,13 @@ class Card:
                 (0, frozen_height, self.rect.w, self.rect.h - frozen_height),
             )
         elif self.sun_cost > sun_value:   # disable status
-            image = pg.Surface((self.rect.w, self.rect.h))  # 黑底
+            image = hd.Surface((self.rect.w, self.rect.h))  # 黑底
             self.orig_image.set_alpha(192)
             image.blit(
                 self.orig_image, (0, 0), (0, 0, self.rect.w, self.rect.h)
             )
         elif self.clicked:
-            image = pg.Surface((self.rect.w, self.rect.h))  # 黑底
+            image = hd.Surface((self.rect.w, self.rect.h))  # 黑底
             chosen_image = self.orig_image
             chosen_image.set_alpha(128)
 
@@ -205,7 +206,7 @@ class MenuBar:
         rect = self.image.get_rect()
         width = rect.w
         height = rect.h
-        self.image = pg.Surface((width * num, height)).convert()
+        self.image = hd.Surface((width * num, height)).convert()
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -365,10 +366,12 @@ class Panel:
                 for i in self.card_list:
                     if i.not_recommend == c.REASON_SLEEP_BUT_COFFEE_BEAN:
                         i.not_recommend = c.REASON_WILL_SLEEP
-                        if not i.canSelect():   # already picked, keep it dimmed
+                        if (
+                            not i.canSelect()
+                        ):   # already picked, keep it dimmed
                             continue
                         i.orig_image.set_alpha(128)
-                        i.image = pg.Surface((i.rect.w, i.rect.h))  # 黑底
+                        i.image = hd.Surface((i.rect.w, i.rect.h))  # 黑底
                         i.image.blit(
                             i.orig_image, (0, 0), (0, 0, i.rect.w, i.rect.h)
                         )
@@ -474,7 +477,7 @@ class MoveCard:
     def createShowImage(self):
         # 新增卡片时显示图片
         if self.rect.w < self.orig_rect.w:   # create a part card image
-            image = pg.Surface([self.rect.w, self.rect.h])
+            image = hd.Surface([self.rect.w, self.rect.h])
             if self.clicked:
                 self.orig_image.set_alpha(128)
             else:
@@ -485,7 +488,7 @@ class MoveCard:
             self.rect.w += 1
         else:
             if self.clicked:
-                image = pg.Surface([self.rect.w, self.rect.h])  # 黑底
+                image = hd.Surface([self.rect.w, self.rect.h])  # 黑底
                 self.orig_image.set_alpha(128)
 
                 image.blit(

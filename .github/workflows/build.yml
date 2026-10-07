@@ -36,7 +36,7 @@ jobs:
           echo y | pip install --no-python-version-warning --disable-pip-version-check pyinstaller
           echo y | pip install --no-python-version-warning --disable-pip-version-check nuitka
           echo y | pip install --no-python-version-warning --disable-pip-version-check zstandard
-          echo y | pip install --no-python-version-warning --disable-pip-version-check pygame
+          echo y | pip install --no-python-version-warning --disable-pip-version-check pygame-ce
           echo y | pip install --no-python-version-warning --disable-pip-version-check ordered-set
 
       # 使用pyinstaller构建
@@ -115,7 +115,7 @@ jobs:
           sudo apt-get install patchelf gdb ccache libfuse2 zstd tar
           python -m pip install --no-python-version-warning --disable-pip-version-check zstandard appdirs ordered-set tqdm Jinja2
           python -m pip install --no-python-version-warning --disable-pip-version-check nuitka
-          python -m pip install --no-python-version-warning --disable-pip-version-check pygame
+          python -m pip install --no-python-version-warning --disable-pip-version-check pygame-ce
 
       # 使用Nuitka构建
       - name: Show nuitka version

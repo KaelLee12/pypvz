@@ -3,6 +3,7 @@ import random
 import pygame as pg
 
 from .. import constants as c
+from .. import hd
 from .. import tool
 
 
@@ -13,7 +14,7 @@ class Car(pg.sprite.Sprite):
         rect = tool.GFX[c.CAR].get_rect()
         width, height = rect.w, rect.h
         self.image = tool.get_image(tool.GFX[c.CAR], 0, 0, width, height)
-        self.mask = pg.mask.from_surface(self.image)
+        self.mask = hd.mask_from_surface(self.image)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.bottom = y
@@ -59,7 +60,7 @@ class Bullet(pg.sprite.Sprite):
         self.load_images()
         self.frame_num = len(self.frames)
         self.image = self.frames[self.frame_index]
-        self.mask = pg.mask.from_surface(self.image)
+        self.mask = hd.mask_from_surface(self.image)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = start_y
@@ -136,7 +137,7 @@ class Bullet(pg.sprite.Sprite):
         self.frames = self.explode_frames
         self.frame_num = len(self.frames)
         self.image = self.frames[0]
-        self.mask = pg.mask.from_surface(self.image)
+        self.mask = hd.mask_from_surface(self.image)
 
         # 播放子弹爆炸音效
         if self.name == c.BULLET_FIREBALL:
@@ -159,7 +160,7 @@ class Fume(pg.sprite.Sprite):
         self.load_images()
         self.frame_num = len(self.frames)
         self.image = self.frames[self.frame_index]
-        self.mask = pg.mask.from_surface(self.image)
+        self.mask = hd.mask_from_surface(self.image)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -276,7 +277,7 @@ class Plant(pg.sprite.Sprite):
         self.loadImages(name, scale)
         self.frame_num = len(self.frames)
         self.image = self.frames[self.frame_index]
-        self.mask = pg.mask.from_surface(self.image)
+        self.mask = hd.mask_from_surface(self.image)
         self.rect = self.image.get_rect()
         self.rect.centerx = x
         self.rect.bottom = y
@@ -325,7 +326,7 @@ class Plant(pg.sprite.Sprite):
         bottom = self.rect.bottom
         x = self.rect.x
         self.image = self.frames[self.frame_index]
-        self.mask = pg.mask.from_surface(self.image)
+        self.mask = hd.mask_from_surface(self.image)
         self.rect = self.image.get_rect()
         self.rect.bottom = bottom
         self.rect.x = x
@@ -360,7 +361,7 @@ class Plant(pg.sprite.Sprite):
             self.animate_timer = self.current_time
 
         self.image = self.frames[self.frame_index]
-        self.mask = pg.mask.from_surface(self.image)
+        self.mask = hd.mask_from_surface(self.image)
         if self.current_time - self.highlight_time < 100:
             self.image.set_alpha(150)
         elif (self.current_time - self.hit_timer) < 200:
@@ -689,7 +690,7 @@ class CherryBomb(Plant):
         old_rect = self.rect
         image = tool.get_image(frame, 0, 0, width, height, c.BLACK, 1)
         self.image = image
-        self.mask = pg.mask.from_surface(self.image)
+        self.mask = hd.mask_from_surface(self.image)
         self.rect = image.get_rect()
         self.rect.centerx = old_rect.centerx
         self.rect.centery = old_rect.centery
@@ -712,7 +713,7 @@ class CherryBomb(Plant):
                 self.animate_timer = self.current_time
 
             self.image = self.frames[self.frame_index]
-            self.mask = pg.mask.from_surface(self.image)
+            self.mask = hd.mask_from_surface(self.image)
 
         if self.current_time - self.highlight_time < 100:
             self.image.set_alpha(150)
@@ -1095,7 +1096,7 @@ class Jalapeno(Plant):
                     return
                 self.animate_timer = self.current_time
         self.image = self.frames[self.frame_index]
-        self.mask = pg.mask.from_surface(self.image)
+        self.mask = hd.mask_from_surface(self.image)
 
         if self.current_time - self.highlight_time < 100:
             self.image.set_alpha(150)
@@ -1284,7 +1285,7 @@ class IceShroom(Plant):
                         return
                 self.animate_timer = self.current_time
         self.image = self.frames[self.frame_index]
-        self.mask = pg.mask.from_surface(self.image)
+        self.mask = hd.mask_from_surface(self.image)
 
         if self.current_time - self.highlight_time < 100:
             self.image.set_alpha(150)
@@ -1399,8 +1400,8 @@ class WallNutBowling(Plant):
 
     def animation(self):
         image = self.frames[self.frame_index]
-        self.image = pg.transform.rotate(image, self.rotate_degree)
-        self.mask = pg.mask.from_surface(self.image)
+        self.image = hd.rotate(image, self.rotate_degree)
+        self.mask = hd.mask_from_surface(self.image)
         # must keep the center postion of image when rotate
         self.rect = self.image.get_rect(center=self.init_rect.center)
 
@@ -1461,10 +1462,10 @@ class RedWallNutBowling(Plant):
 
         image = self.frames[self.frame_index]
         if self.state == c.IDLE:
-            self.image = pg.transform.rotate(image, self.rotate_degree)
+            self.image = hd.rotate(image, self.rotate_degree)
         else:
             self.image = image
-        self.mask = pg.mask.from_surface(self.image)
+        self.mask = hd.mask_from_surface(self.image)
         # must keep the center postion of image when rotate
         self.rect = self.image.get_rect(center=self.init_rect.center)
 
@@ -1671,7 +1672,7 @@ class CoffeeBean(Plant):
             self.animate_timer = self.current_time
 
         self.image = self.frames[self.frame_index]
-        self.mask = pg.mask.from_surface(self.image)
+        self.mask = hd.mask_from_surface(self.image)
         if self.current_time - self.highlight_time < 100:
             self.image.set_alpha(150)
         elif (self.current_time - self.hit_timer) < 200:
@@ -1883,7 +1884,7 @@ class DoomShroom(Plant):
                     return
                 self.animate_timer = self.current_time
         self.image = self.frames[self.frame_index]
-        self.mask = pg.mask.from_surface(self.image)
+        self.mask = hd.mask_from_surface(self.image)
 
         if self.current_time - self.highlight_time < 100:
             self.image.set_alpha(150)
@@ -1965,7 +1966,7 @@ class Grave(Plant):
         Plant.__init__(self, x, y, c.GRAVE, c.INF, None)
         self.frame_index = random.randint(0, self.frame_num - 1)
         self.image = self.frames[self.frame_index]
-        self.mask = pg.mask.from_surface(self.image)
+        self.mask = hd.mask_from_surface(self.image)
         self.attack_check = c.CHECK_ATTACK_NEVER
 
     def animation(self):
@@ -1999,7 +2000,7 @@ class GraveBuster(Plant):
             self.animate_timer = self.current_time
 
         self.image = self.frames[self.frame_index]
-        self.mask = pg.mask.from_surface(self.image)
+        self.mask = hd.mask_from_surface(self.image)
 
         if self.current_time - self.highlight_time < 100:
             self.image.set_alpha(150)
@@ -2084,7 +2085,7 @@ class FumeShroom(Plant):
             self.animate_timer = self.current_time
 
         self.image = self.frames[self.frame_index]
-        self.mask = pg.mask.from_surface(self.image)
+        self.mask = hd.mask_from_surface(self.image)
 
         if self.current_time - self.highlight_time < 100:
             self.image.set_alpha(150)
@@ -2184,7 +2185,7 @@ class GiantWallNut(Plant):
 
     def animation(self):
         image = self.frames[self.frame_index]
-        self.image = pg.transform.rotate(image, self.rotate_degree)
-        self.mask = pg.mask.from_surface(self.image)
+        self.image = hd.rotate(image, self.rotate_degree)
+        self.mask = hd.mask_from_surface(self.image)
         # must keep the center postion of image when rotate
         self.rect = self.image.get_rect(center=self.init_rect.center)
