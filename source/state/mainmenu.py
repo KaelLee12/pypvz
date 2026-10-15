@@ -5,6 +5,7 @@ import pygame as pg
 from .. import constants as c
 from .. import hd
 from .. import tool
+from ..component import sun_options
 
 
 class Menu(tool.State):
@@ -241,7 +242,7 @@ class Menu(tool.State):
         # 音量+、-应当处于同一高度
         self.sound_volume_minus_button_rect.y = (
             self.sound_volume_plus_button_rect.y
-        ) = 250
+        ) = 284
 
     def setupSunflowerTrophy(self):
         # 设置金银向日葵图片信息
@@ -299,7 +300,7 @@ class Menu(tool.State):
         )
         volume_tips_rect = volume_tips.get_rect()
         volume_tips_rect.x = 275
-        volume_tips_rect.y = 247
+        volume_tips_rect.y = 282
         surface.blit(volume_tips, volume_tips_rect)
 
     def update(
@@ -345,11 +346,17 @@ class Menu(tool.State):
                 self.sound_volume_minus_button_rect,
             )
             self.showCurrentVolumeImage(surface)
+            sun_options.draw_sun_options(surface, self.game_info)
             if mouse_pos:
                 # 返回
                 if self.inArea(self.return_button_rect, *mouse_pos):
                     self.option_button_clicked = False
                     c.SOUND_BUTTON_CLICK.play()
+                elif sun_options.handle_sun_option_click(
+                    mouse_pos, self.game_info
+                ):
+                    c.SOUND_BUTTON_CLICK.play()
+                    self.saveUserData()
                 # 音量+
                 elif self.inArea(
                     self.sound_volume_plus_button_rect, *mouse_pos

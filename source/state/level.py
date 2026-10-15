@@ -7,7 +7,7 @@ import pygame as pg
 from .. import constants as c
 from .. import hd
 from .. import tool
-from ..component import map, menubar, plant, zombie
+from ..component import map, menubar, plant, sun_options, zombie
 
 logger = logging.getLogger('main')
 
@@ -475,7 +475,7 @@ class Level(tool.State):
         self.state = c.CHOOSE
         self.panel = menubar.Panel(
             c.CARDS_TO_CHOOSE,
-            self.map_data[c.INIT_SUN_NAME],
+            self.initialSunValue(),
             self.background_type,
         )
 
@@ -511,9 +511,7 @@ class Level(tool.State):
 
         self.state = c.PLAY
         if self.bar_type == c.CHOOSEBAR_STATIC:
-            self.menubar = menubar.MenuBar(
-                card_list, self.map_data[c.INIT_SUN_NAME]
-            )
+            self.menubar = menubar.MenuBar(card_list, self.initialSunValue())
         else:
             self.menubar = menubar.MoveBar(card_list)
 
@@ -659,7 +657,7 @@ class Level(tool.State):
         )
         self.restart_button_rect = self.restart_button.get_rect()
         self.restart_button_rect.x = 295
-        self.restart_button_rect.y = 325
+        self.restart_button_rect.y = 336
 
         # 主菜单按钮
         frame_rect = (0, 0, 206, 43)
@@ -668,7 +666,7 @@ class Level(tool.State):
         )
         self.mainMenu_button_rect = self.mainMenu_button.get_rect()
         self.mainMenu_button_rect.x = 299
-        self.mainMenu_button_rect.y = 372
+        self.mainMenu_button_rect.y = 384
 
         # 音量+、音量-
         frame_rect = (0, 0, 39, 41)
@@ -703,7 +701,7 @@ class Level(tool.State):
         # 音量+、-应当处于同一高度
         self.sound_volume_minus_button_rect.y = (
             self.sound_volume_plus_button_rect.y
-        ) = 250
+        ) = 284
 
     def pauseAndCheckMenuOptions(self, mouse_pos, mouse_click):
         # 设置暂停状态
@@ -746,6 +744,13 @@ class Level(tool.State):
                 c.SOUND_BUTTON_CLICK.play()
                 # 将音量信息存档
                 self.saveUserData()
+            elif sun_options.handle_sun_option_click(
+                mouse_pos, self.game_info
+            ):
+                c.SOUND_BUTTON_CLICK.play()
+                self.saveUserData()
+                if self.state == c.CHOOSE:
+                    self.panel.setSunValue(self.initialSunValue())
             elif self.inArea(self.sound_volume_minus_button_rect, *mouse_pos):
                 self.game_info[c.SOUND_VOLUME] = round(
                     max(self.game_info[c.SOUND_VOLUME] - 0.05, 0), 2
@@ -845,6 +850,27 @@ class Level(tool.State):
                 self.removeMouseImagePlus()
                 return
 
+    def initialSunValue(self) -> int:
+        return sun_options.resolve_initial_sun(
+            self.map_data[c.INIT_SUN_NAME], self.game_info
+        )
+
+    def autoCollectSuns(self) -> None:
+        if not sun_options.auto_collect_enabled(self.game_info):
+            return
+        if not hasattr(self.menubar, 'increaseSunValue'):
+            return
+        collected_any = False
+        for sun in tuple(self.sun_group):
+            if sun.state == c.DIE:
+                continue
+            self.menubar.increaseSunValue(sun.sun_value)
+            sun.state = c.DIE
+            sun.kill()
+            collected_any = True
+        if collected_any:
+            c.SOUND_COLLECT_SUN.play()
+
     def play(self, mouse_pos, mouse_click):
         # 如果暂停
         if self.show_game_menu:
@@ -892,6 +918,8 @@ class Level(tool.State):
                 x, y = self.map.getMapGridPos(map_x, map_y)
                 self.sun_group.add(plant.Sun(x, 0, x, y))
                 self.fallen_sun += 1
+
+        self.autoCollectSuns()
 
         # 检查有没有捡到阳光
         clicked_sun = False
@@ -2076,8 +2104,9 @@ class Level(tool.State):
         )
         volume_tips_rect = volume_tips.get_rect()
         volume_tips_rect.x = 275
-        volume_tips_rect.y = 247
+        volume_tips_rect.y = 282
         surface.blit(volume_tips, volume_tips_rect)
+        sun_options.draw_sun_options(surface, self.game_info)
 
     def draw(self, surface):
         self.level.blit(self.background, self.viewport, self.viewport)

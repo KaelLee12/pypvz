@@ -128,6 +128,8 @@ LEVEL_COMPLETIONS = 'level completions'
 LITTLEGAME_COMPLETIONS = 'littleGame completions'
 GAME_RATE = 'game rate'
 SOUND_VOLUME = 'volume'
+AUTO_COLLECT_SUN = 'auto collect sun'
+CUSTOM_INIT_SUN = 'custom init sun'
 
 # 整个游戏的状态
 MAIN_MENU = 'main menu'
@@ -504,6 +506,7 @@ PRODUCE_SUN_INTERVAL = 4250   # 基准
 FLOWER_SUN_INTERVAL = 24000
 SUN_LIVE_TIME = 10000
 SUN_VALUE = 25
+SUN_VALUE_CAP = 9990
 
 # 僵尸冷冻
 ICE_SLOW_TIME = 10000
@@ -774,6 +777,9 @@ INIT_USERDATA = {
     LITTLEGAME_COMPLETIONS: 0,
     GAME_RATE: 1,
     SOUND_VOLUME: 1,
+    AUTO_COLLECT_SUN: False,
+    # -1 表示使用关卡自带的初始阳光
+    CUSTOM_INIT_SUN: -1,
 }
 
 # 无穷大常量

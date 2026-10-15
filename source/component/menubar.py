@@ -252,8 +252,8 @@ class MenuBar:
 
     def increaseSunValue(self, value):
         self.sun_value += value
-        if self.sun_value > 9990:
-            self.sun_value = 9990
+        if self.sun_value > c.SUN_VALUE_CAP:
+            self.sun_value = c.SUN_VALUE_CAP
 
     def setCardFrozenTime(self, plant_name):
         for card in self.card_list:
@@ -307,6 +307,9 @@ class Panel:
         self.value_rect = self.value_image.get_rect()
         self.value_rect.x = 21
         self.value_rect.y = self.menu_rect.bottom - 24
+
+    def setSunValue(self, sun_value: int) -> None:
+        self.value_image = getSunValueImage(sun_value)
 
         self.button_image = self.loadFrame(c.START_BUTTON)
         self.button_rect = self.button_image.get_rect()
