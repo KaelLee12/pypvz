@@ -707,10 +707,12 @@ class Level(tool.State):
         ) = 284
 
     def pauseAndCheckMenuOptions(self, mouse_pos, mouse_click):
-        # 设置暂停状态
-        self.pause = True
-        # 暂停播放音乐
-        pg.mixer.music.pause()
+        # 只在进入暂停的那一帧暂停音乐。music.pause() 持有 GIL 去抢 SDL 音频锁，
+        # 而音效播完时音频线程持有音频锁回调 Python 要 GIL；每帧调用会让两者
+        # 互锁，表现为在菜单里点按钮（播放点击音效）后整个游戏卡死
+        if not self.pause:
+            self.pause = True
+            pg.mixer.music.pause()
         if mouse_click[0]:
             # 返回键
             if self.inArea(self.return_button_rect, *mouse_pos):
