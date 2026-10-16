@@ -308,13 +308,13 @@ class Panel:
         self.value_rect.x = 21
         self.value_rect.y = self.menu_rect.bottom - 24
 
-    def setSunValue(self, sun_value: int) -> None:
-        self.value_image = getSunValueImage(sun_value)
-
         self.button_image = self.loadFrame(c.START_BUTTON)
         self.button_rect = self.button_image.get_rect()
         self.button_rect.x = 155
         self.button_rect.y = 547
+
+    def setSunValue(self, sun_value: int) -> None:
+        self.value_image = getSunValueImage(sun_value)
 
     def setupCards(self, card_list):
         self.card_list = []

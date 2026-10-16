@@ -744,6 +744,16 @@ class Level(tool.State):
                 c.SOUND_BUTTON_CLICK.play()
                 # 将音量信息存档
                 self.saveUserData()
+            elif (
+                self.currentSunValue() is not None
+                and (delta := sun_options.hit_sun_adjust(mouse_pos))
+                is not None
+            ):
+                # 关卡进行中：直接加减当前阳光，不改存档里的初始阳光
+                self.menubar.sun_value = sun_options.adjust_current_sun(
+                    self.menubar.sun_value, delta
+                )
+                c.SOUND_BUTTON_CLICK.play()
             elif sun_options.handle_sun_option_click(
                 mouse_pos, self.game_info
             ):
@@ -854,6 +864,12 @@ class Level(tool.State):
         return sun_options.resolve_initial_sun(
             self.map_data[c.INIT_SUN_NAME], self.game_info
         )
+
+    def currentSunValue(self) -> int | None:
+        """关卡进行中且使用阳光时返回当前阳光，否则返回 None。"""
+        if self.state != c.PLAY:
+            return None
+        return getattr(getattr(self, 'menubar', None), 'sun_value', None)
 
     def autoCollectSuns(self) -> None:
         if not sun_options.auto_collect_enabled(self.game_info):
@@ -2106,7 +2122,9 @@ class Level(tool.State):
         volume_tips_rect.x = 275
         volume_tips_rect.y = 282
         surface.blit(volume_tips, volume_tips_rect)
-        sun_options.draw_sun_options(surface, self.game_info)
+        sun_options.draw_sun_options(
+            surface, self.game_info, self.currentSunValue()
+        )
 
     def draw(self, surface):
         self.level.blit(self.background, self.viewport, self.viewport)

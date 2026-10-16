@@ -63,6 +63,11 @@ def adjust_custom_init_sun(current: int, delta: int) -> int:
     return updated
 
 
+def adjust_current_sun(current: int, delta: int) -> int:
+    """关卡内直接加减当前阳光，收在 0..SUN_VALUE_CAP。"""
+    return max(0, min(current + delta, c.SUN_VALUE_CAP))
+
+
 def format_custom_init_sun(value: int) -> str:
     if value < 0:
         return '默认'
@@ -80,7 +85,10 @@ def _draw_adjust_button(surface: pg.Surface, rect: pg.Rect, sign: str) -> None:
     surface.blit(button, rect)
 
 
-def draw_sun_options(surface: pg.Surface, game_info: dict) -> None:
+def draw_sun_options(
+    surface: pg.Surface, game_info: dict, current_sun: int | None = None
+) -> None:
+    """current_sun 不为 None 时（关卡进行中），加减按钮显示并调整当前阳光。"""
     font = hd.Font(c.FONT_PATH, _LABEL_FONT_SIZE)
     if auto_collect_enabled(game_info):
         auto_text = '自动收集：开'
@@ -91,17 +99,27 @@ def draw_sun_options(surface: pg.Surface, game_info: dict) -> None:
     auto_image = font.render(auto_text, True, auto_color)
     surface.blit(auto_image, AUTO_COLLECT_TEXT_POS)
 
-    custom_sun = normalize_custom_init_sun(
-        game_info.get(c.CUSTOM_INIT_SUN, -1)
-    )
-    sun_image = font.render(
-        f'初始阳光：{format_custom_init_sun(custom_sun)}',
-        True,
-        c.LIGHTGRAY,
-    )
+    if current_sun is not None:
+        sun_text = f'当前阳光：{current_sun}'
+    else:
+        custom_sun = normalize_custom_init_sun(
+            game_info.get(c.CUSTOM_INIT_SUN, -1)
+        )
+        sun_text = f'初始阳光：{format_custom_init_sun(custom_sun)}'
+    sun_image = font.render(sun_text, True, c.LIGHTGRAY)
     surface.blit(sun_image, INIT_SUN_TEXT_POS)
     _draw_adjust_button(surface, INIT_SUN_MINUS_RECT, '-')
     _draw_adjust_button(surface, INIT_SUN_PLUS_RECT, '+')
+
+
+def hit_sun_adjust(mouse_pos: Sequence[int]) -> int | None:
+    """点中阳光加减按钮时返回增量，否则返回 None。"""
+    x, y = mouse_pos
+    if INIT_SUN_MINUS_RECT.collidepoint(x, y):
+        return -SUN_ADJUST_STEP
+    if INIT_SUN_PLUS_RECT.collidepoint(x, y):
+        return SUN_ADJUST_STEP
+    return None
 
 
 def handle_sun_option_click(
@@ -112,17 +130,11 @@ def handle_sun_option_click(
     if AUTO_COLLECT_RECT.collidepoint(x, y):
         game_info[c.AUTO_COLLECT_SUN] = not auto_collect_enabled(game_info)
         return c.AUTO_COLLECT_SUN
+    delta = hit_sun_adjust(mouse_pos)
+    if delta is None:
+        return None
     custom_sun = normalize_custom_init_sun(
         game_info.get(c.CUSTOM_INIT_SUN, -1)
     )
-    if INIT_SUN_MINUS_RECT.collidepoint(x, y):
-        game_info[c.CUSTOM_INIT_SUN] = adjust_custom_init_sun(
-            custom_sun, -SUN_ADJUST_STEP
-        )
-        return c.CUSTOM_INIT_SUN
-    if INIT_SUN_PLUS_RECT.collidepoint(x, y):
-        game_info[c.CUSTOM_INIT_SUN] = adjust_custom_init_sun(
-            custom_sun, SUN_ADJUST_STEP
-        )
-        return c.CUSTOM_INIT_SUN
-    return None
+    game_info[c.CUSTOM_INIT_SUN] = adjust_custom_init_sun(custom_sun, delta)
+    return c.CUSTOM_INIT_SUN
