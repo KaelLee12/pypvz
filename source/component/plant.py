@@ -2189,3 +2189,146 @@ class GiantWallNut(Plant):
         self.mask = hd.mask_from_surface(self.image)
         # must keep the center postion of image when rotate
         self.rect = self.image.get_rect(center=self.init_rect.center)
+
+
+# 玉米加农炮：横向占据两格，装填完毕后由玩家点击发射
+class CobCannon(Plant):
+    def __init__(self, x, y, cob_group):
+        # (x, y) is the anchor of the left grid; the sprite spans two grids
+        Plant.__init__(
+            self,
+            x + c.GRID_X_SIZE * (c.COBCANNON_GRID_SPAN - 1) // 2,
+            y,
+            c.COBCANNON,
+            c.PLANT_HEALTH,
+            None,
+        )
+        self.orig_pos = (x, y)
+        self.cob_group = cob_group
+        self.animate_interval = 120
+        self.charge_timer = None
+        self.ready = False
+        self.attack_check = c.CHECK_ATTACK_NEVER
+
+    def loadImages(self, name, scale):
+        self.charge_frames = []
+        self.ready_frames = []
+        self.fire_frames = []
+        self.loadFrames(self.charge_frames, name, scale)
+        self.loadFrames(self.ready_frames, c.COBCANNON_READY, scale)
+        self.loadFrames(self.fire_frames, c.COBCANNON_FIRE, scale)
+        self.frames = self.charge_frames
+
+    def canFire(self) -> bool:
+        return self.ready and self.state == c.IDLE and self.health > 0
+
+    def idling(self):
+        if self.charge_timer is None:
+            self.charge_timer = self.current_time
+        if (not self.ready) and (
+            self.current_time - self.charge_timer >= c.COBCANNON_CHARGE_TIME
+        ):
+            self.ready = True
+            self.changeFrames(self.ready_frames)
+
+    def fire(self, dest_x: int, dest_y: int, dest_map_y: int) -> bool:
+        if not self.canFire():
+            return False
+        self.ready = False
+        self.state = c.ATTACK
+        self.changeFrames(self.fire_frames)
+        self.animate_timer = self.current_time
+        muzzle_x = self.rect.x + self.rect.w * 4 // 5
+        muzzle_y = self.rect.y + 10
+        self.cob_group.add(
+            CobBullet(muzzle_x, muzzle_y, dest_x, dest_y, dest_map_y)
+        )
+        c.SOUND_SHOOT.play()
+        return True
+
+    def attacking(self):
+        # play the recoil animation once, then start recharging
+        if (self.frame_index >= self.frame_num - 1) and (
+            self.current_time - self.animate_timer > self.animate_interval
+        ):
+            self.state = c.IDLE
+            self.changeFrames(self.charge_frames)
+            self.charge_timer = self.current_time
+
+    def getPosition(self):
+        return self.orig_pos
+
+
+# 玉米加农炮炮弹：先竖直飞出屏幕，再落到目标点爆炸
+class CobBullet(pg.sprite.Sprite):
+    RISE = 'rise'
+    WAIT = 'wait'
+    FALL = 'fall'
+
+    def __init__(
+        self, x: int, y: int, dest_x: int, dest_y: int, dest_map_y: int
+    ):
+        pg.sprite.Sprite.__init__(self)
+        self.name = c.BULLET_COB
+        cob = tool.GFX[c.BULLET_COB][0]
+        self.rise_image = hd.rotate(cob, 90)
+        self.fall_image = hd.rotate(cob, -90)
+        target = tool.GFX[c.COBCANNON_TARGET][0]
+        self.target_image = hd.scale(
+            target, (target.get_width() * 2 // 3, target.get_height() * 2 // 3)
+        )
+        self.target_image.set_alpha(160)
+
+        self.image = self.rise_image
+        self.rect = self.image.get_rect(midbottom=(x, y))
+        self.dest_x = dest_x
+        self.dest_y = dest_y
+        self.dest_map_y = dest_map_y
+        self.phase = self.RISE
+        self.state = c.FLY
+        self.boomed = False   # 爆炸伤害是否已由关卡结算
+        self.current_time = 0
+        self.timer = 0
+
+    def update(self, game_info: dict):
+        self.current_time = game_info[c.CURRENT_TIME]
+        if self.state == c.EXPLODE:
+            if self.current_time - self.timer > 500:
+                self.kill()
+            return
+        if self.phase == self.RISE:
+            self.rect.y -= 15
+            if self.rect.bottom < 0:
+                self.phase = self.WAIT
+                self.timer = self.current_time
+        elif self.phase == self.WAIT:
+            if self.current_time - self.timer >= c.COBCANNON_FLIGHT_DELAY:
+                self.phase = self.FALL
+                self.image = self.fall_image
+                self.rect = self.image.get_rect(midbottom=(self.dest_x, 0))
+        elif self.phase == self.FALL:
+            self.rect.y += 18
+            if self.rect.bottom >= self.dest_y:
+                self.setExplode()
+
+    def setExplode(self):
+        frame = tool.GFX[c.BOOM_IMAGE]
+        rect = frame.get_rect()
+        self.image = tool.get_image(frame, 0, 0, rect.w, rect.h, c.BLACK, 1)
+        self.rect = self.image.get_rect(
+            centerx=self.dest_x, bottom=self.dest_y + 20
+        )
+        self.state = c.EXPLODE
+        self.timer = self.current_time
+        c.SOUND_BOMB.play()
+
+    def draw(self, surface):
+        if self.state != c.EXPLODE:
+            surface.blit(
+                self.target_image,
+                self.target_image.get_rect(
+                    center=(self.dest_x, self.dest_y - 20)
+                ),
+            )
+        if self.phase != self.WAIT or self.state == c.EXPLODE:
+            surface.blit(self.image, self.rect)

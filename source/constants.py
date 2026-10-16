@@ -381,6 +381,12 @@ PLANT_CARD_INFO = (  # 元组 (植物名称, 卡片名称, 阳光, 冷却时间)
         7500,
     ),
     (GARLIC := 'Garlic', CARD_GARLIC := 'card_garlic', 50, 7500),
+    (
+        COBCANNON := 'CobCannon',
+        CARD_COBCANNON := 'card_cobcannon',
+        500,
+        50000,
+    ),
     # 应当保证这3个在一般模式下不可选的特殊植物恒在最后
     (WALLNUTBOWLING := 'WallNutBowling', CARD_WALLNUT := 'card_wallnut', 0, 0),
     (
@@ -498,6 +504,17 @@ TALLNUT_CRACKED2_HEALTH = TALLNUT_HEALTH // 3
 GARLIC_HEALTH = 450
 GARLIC_CRACKED1_HEALTH = GARLIC_HEALTH // 3 * 2
 GARLIC_CRACKED2_HEALTH = GARLIC_HEALTH // 3
+# 玉米加农炮
+COBCANNON_GRID_SPAN = 2   # 横向占据的格子数
+COBCANNON_CHARGE_TIME = 35000   # 装填时间（原版约 34.75 s）
+COBCANNON_FLIGHT_DELAY = 1500   # 炮弹飞出屏幕到开始下落的间隔
+COBCANNON_DAMAGE = 1800
+COBCANNON_EXPLODE_X_RANGE = GRID_X_SIZE * 1.5
+COBCANNON_EXPLODE_Y_RANGE = 1
+COBCANNON_READY = 'CobCannonReady'
+COBCANNON_FIRE = 'CobCannonFire'
+COBCANNON_TARGET = 'CobCannonTarget'
+BULLET_COB = 'CobBullet'
 # 坚果保龄球攻击伤害
 WALLNUT_BOWLING_DAMAGE = 550
 

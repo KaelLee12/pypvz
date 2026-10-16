@@ -122,6 +122,9 @@ class Level(tool.State):
             pg.sprite.Group() for i in range(self.map_y_len)
         ]   # 被魅惑的僵尸
         self.bullet_groups = [pg.sprite.Group() for i in range(self.map_y_len)]
+        # 玉米加农炮炮弹跨行飞行，单独成组
+        self.cob_group = pg.sprite.Group()
+        self.cob_cannon_aiming = None   # 正在瞄准的玉米加农炮
 
     # 按照规则生成每一波僵尸
     # 将波刷新和一波中的僵尸生成分开
@@ -923,6 +926,7 @@ class Level(tool.State):
 
         self.head_group.update(self.game_info)
         self.sun_group.update(self.game_info)
+        self.cob_group.update(self.game_info)
 
         if self.produce_sun:
             # 原版阳光掉落机制：(已掉落阳光数*100 ms + 4250 ms) 与 9500 ms的最小值，再加 0 ~ 2750 ms 之间的一个数
@@ -936,6 +940,10 @@ class Level(tool.State):
                 self.fallen_sun += 1
 
         self.autoCollectSuns()
+
+        # 玉米加农炮的选中与发射优先处理，消耗掉本次点击
+        if self.handleCobCannonClick(mouse_pos, mouse_click):
+            mouse_click = [False, False]
 
         # 检查有没有捡到阳光
         clicked_sun = False
@@ -1012,6 +1020,7 @@ class Level(tool.State):
 
         # 检查碰撞
         self.checkBulletCollisions()
+        self.checkCobBullets()
         self.checkZombieCollisions()
         self.checkPlants()
         self.checkCarCollisions()
@@ -1200,6 +1209,9 @@ class Level(tool.State):
         if self.hint_image is None:
             self.setupHintImage()
         x, y = self.hint_rect.centerx, self.hint_rect.bottom
+        if self.plant_name == c.COBCANNON:
+            # 提示图居中于两格之间，换算回左格坐标
+            x = pos[0]
         map_x, map_y = self.map.getMapIndex(x, y)
 
         # 新植物也需要在这里声明
@@ -1302,6 +1314,8 @@ class Level(tool.State):
                 new_plant = plant.PumpkinHead(x, y)
             case c.GIANTWALLNUT:
                 new_plant = plant.GiantWallNut(x, y)
+            case c.COBCANNON:
+                new_plant = plant.CobCannon(x, y, self.cob_group)
 
         if (new_plant.name in c.CAN_SLEEP_PLANTS) and (
             self.background_type in c.DAYTIME_BACKGROUNDS
@@ -1324,6 +1338,9 @@ class Level(tool.State):
             self.map.addMapPlant(
                 map_x, map_y, self.plant_name, sleep=mushroom_sleep
             )
+            if self.plant_name == c.COBCANNON:
+                for dx in range(1, c.COBCANNON_GRID_SPAN):
+                    self.map.addMapPlant(map_x + dx, map_y, self.plant_name)
         self.removeMouseImage()
 
         # print(self.new_plant_and_positon)
@@ -1351,6 +1368,11 @@ class Level(tool.State):
             if self.plant_name in {c.LILYPAD, '花盆（未实现）', c.TANGLEKLEP}:
                 self.hint_rect.centerx = pos[0]
                 self.hint_rect.bottom = pos[1] + 25
+            elif self.plant_name == c.COBCANNON:
+                self.hint_rect.centerx = (
+                    pos[0] + c.GRID_X_SIZE * (c.COBCANNON_GRID_SPAN - 1) // 2
+                )
+                self.hint_rect.bottom = pos[1]
             else:
                 self.hint_rect.centerx = pos[0]
                 self.hint_rect.bottom = pos[1]
@@ -1692,6 +1714,73 @@ class Level(tool.State):
                 if self.cars[i].dead:
                     self.cars[i] = None
 
+    def handleCobCannonClick(self, mouse_pos, mouse_click) -> bool:
+        """选中已装填的玉米加农炮或向目标发射，返回是否消耗了本次点击。"""
+        aiming = self.cob_cannon_aiming
+        if aiming is not None:
+            if not aiming.alive() or not aiming.canFire():
+                self.cob_cannon_aiming = aiming = None
+            else:
+                # 选中状态以半透明高亮提示
+                aiming.highlight_time = self.current_time
+        if not mouse_pos or not (mouse_click[0] or mouse_click[1]):
+            return False
+
+        if aiming is not None:
+            # 左键有效区域发射，其余点击（右键、菜单栏等）取消瞄准
+            self.cob_cannon_aiming = None
+            if mouse_click[0]:
+                target = self.getCobCannonTarget(mouse_pos)
+                if target is not None:
+                    aiming.fire(*target)
+            return True
+
+        if self.drag_plant or self.drag_shovel or not mouse_click[0]:
+            return False
+        x, y = mouse_pos
+        # 阳光优先于加农炮被点击
+        if any(sun.rect.collidepoint(x, y) for sun in self.sun_group):
+            return False
+        for plant_group in self.plant_groups:
+            for target_plant in plant_group:
+                if (
+                    target_plant.name == c.COBCANNON
+                    and target_plant.canFire()
+                    and target_plant.rect.collidepoint(x, y)
+                ):
+                    self.cob_cannon_aiming = target_plant
+                    c.SOUND_TAPPING_CARD.play()
+                    return True
+        return False
+
+    def getCobCannonTarget(
+        self, mouse_pos: tuple[int, int]
+    ) -> tuple[int, int, int] | None:
+        """把点击位置换算为 (落点x, 落点y, 行号)，不在草坪上时返回 None。"""
+        x, y = mouse_pos
+        if self.menubar.checkMenuBarClick(mouse_pos) or self.inArea(
+            self.little_menu_rect, x, y
+        ):
+            return None
+        if self.has_shovel and self.inArea(self.shovel_box_rect, x, y):
+            return None
+        _, map_y = self.map.getMapIndex(x, y)
+        if not (0 <= map_y < self.map_y_len) or x < 0:
+            return None
+        _, dest_y = self.map.getMapGridPos(0, map_y)
+        return min(x, c.SCREEN_WIDTH), dest_y, map_y
+
+    def checkCobBullets(self):
+        for cob in self.cob_group:
+            if cob.state == c.EXPLODE and not cob.boomed:
+                self.boomZombies(
+                    cob.dest_x,
+                    cob.dest_map_y,
+                    c.COBCANNON_EXPLODE_Y_RANGE,
+                    c.COBCANNON_EXPLODE_X_RANGE,
+                )
+                cob.boomed = True
+
     def boomZombies(self, x, map_y, y_range, x_range, effect=None):
         for i in range(self.map_y_len):
             if abs(i - map_y) > y_range:
@@ -1770,6 +1859,14 @@ class Level(tool.State):
         # 整理地图信息
         if self.bar_type != c.CHOOSEBAR_BOWLING:
             self.map.removeMapPlant(map_x, map_y, target_plant.name)
+            if target_plant.name == c.COBCANNON:
+                for dx in range(1, c.COBCANNON_GRID_SPAN):
+                    if self.map.isValid(map_x + dx, map_y):
+                        self.map.removeMapPlant(
+                            map_x + dx, map_y, target_plant.name
+                        )
+                if self.cob_cannon_aiming is target_plant:
+                    self.cob_cannon_aiming = None
         # 将睡眠植物移除后更新睡眠状态
         if target_plant.state == c.SLEEP:
             self.map.map[map_y][map_x][c.MAP_SLEEP] = False
@@ -2154,7 +2251,16 @@ class Level(tool.State):
                 if self.cars[i]:
                     self.cars[i].draw(surface)
             self.head_group.draw(surface)
+            for cob in self.cob_group:
+                cob.draw(surface)
             self.sun_group.draw(surface)
+
+            if self.cob_cannon_aiming is not None:
+                target_image = tool.GFX[c.COBCANNON_TARGET][0]
+                surface.blit(
+                    target_image,
+                    target_image.get_rect(center=tool.DISPLAY.mouse_pos()),
+                )
 
             if self.drag_plant:
                 self.drawMouseShow(surface)

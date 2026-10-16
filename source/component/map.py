@@ -98,6 +98,9 @@ class Map:
                 return True
             else:
                 return False
+        # 玉米加农炮占据的格子不能再种其他植物（包括南瓜头）
+        if c.COBCANNON in self.map[map_y][map_x][c.MAP_PLANT]:
+            return False
         # 被非植物障碍占据的格子对于一般植物不可种植
         if any(
             (i in c.NON_PLANT_OBJECTS)
@@ -256,6 +259,15 @@ class Map:
     ) -> tuple[int, int]:
         pos = None
         map_x, map_y = self.getMapIndex(x, y)
+        if plant_name == c.COBCANNON:
+            # 以鼠标所在格为左格，横向占据 COBCANNON_GRID_SPAN 格
+            if all(
+                self.isValid(map_x + dx, map_y)
+                and self.isAvailable(map_x + dx, map_y, plant_name)
+                for dx in range(c.COBCANNON_GRID_SPAN)
+            ):
+                pos = self.getMapGridPos(map_x, map_y)
+            return pos
         if self.isValid(map_x, map_y) and self.isAvailable(
             map_x, map_y, plant_name
         ):
