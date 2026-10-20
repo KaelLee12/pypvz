@@ -363,11 +363,11 @@ class Plant(pg.sprite.Sprite):
         self.image = self.frames[self.frame_index]
         self.mask = hd.mask_from_surface(self.image)
         if self.current_time - self.highlight_time < 100:
-            self.image.set_alpha(150)
+            self.image = hd.with_alpha(self.image, 150)
         elif (self.current_time - self.hit_timer) < 200:
-            self.image.set_alpha(192)
+            self.image = hd.with_alpha(self.image, 192)
         else:
-            self.image.set_alpha(255)
+            self.image = hd.with_alpha(self.image, 255)
 
     def canAttack(self, zombie):
         if (zombie.name == c.SNORKELZOMBIE) and (
@@ -716,11 +716,11 @@ class CherryBomb(Plant):
             self.mask = hd.mask_from_surface(self.image)
 
         if self.current_time - self.highlight_time < 100:
-            self.image.set_alpha(150)
+            self.image = hd.with_alpha(self.image, 150)
         elif (self.current_time - self.hit_timer) < 200:
-            self.image.set_alpha(192)
+            self.image = hd.with_alpha(self.image, 192)
         else:
-            self.image.set_alpha(255)
+            self.image = hd.with_alpha(self.image, 255)
 
 
 class Chomper(Plant):
@@ -1099,11 +1099,11 @@ class Jalapeno(Plant):
         self.mask = hd.mask_from_surface(self.image)
 
         if self.current_time - self.highlight_time < 100:
-            self.image.set_alpha(150)
+            self.image = hd.with_alpha(self.image, 150)
         elif (self.current_time - self.hit_timer) < 200:
-            self.image.set_alpha(192)
+            self.image = hd.with_alpha(self.image, 192)
         else:
-            self.image.set_alpha(255)
+            self.image = hd.with_alpha(self.image, 255)
 
     def getPosition(self):
         return self.orig_pos
@@ -1288,11 +1288,11 @@ class IceShroom(Plant):
         self.mask = hd.mask_from_surface(self.image)
 
         if self.current_time - self.highlight_time < 100:
-            self.image.set_alpha(150)
+            self.image = hd.with_alpha(self.image, 150)
         elif (self.current_time - self.hit_timer) < 200:
-            self.image.set_alpha(192)
+            self.image = hd.with_alpha(self.image, 192)
         else:
-            self.image.set_alpha(255)
+            self.image = hd.with_alpha(self.image, 255)
 
     def getPosition(self):
         return self.orig_pos
@@ -1674,11 +1674,11 @@ class CoffeeBean(Plant):
         self.image = self.frames[self.frame_index]
         self.mask = hd.mask_from_surface(self.image)
         if self.current_time - self.highlight_time < 100:
-            self.image.set_alpha(150)
+            self.image = hd.with_alpha(self.image, 150)
         elif (self.current_time - self.hit_timer) < 200:
-            self.image.set_alpha(192)
+            self.image = hd.with_alpha(self.image, 192)
         else:
-            self.image.set_alpha(255)
+            self.image = hd.with_alpha(self.image, 255)
 
 
 class SeaShroom(Plant):
@@ -1887,11 +1887,11 @@ class DoomShroom(Plant):
         self.mask = hd.mask_from_surface(self.image)
 
         if self.current_time - self.highlight_time < 100:
-            self.image.set_alpha(150)
+            self.image = hd.with_alpha(self.image, 150)
         elif (self.current_time - self.hit_timer) < 200:
-            self.image.set_alpha(192)
+            self.image = hd.with_alpha(self.image, 192)
         else:
-            self.image.set_alpha(255)
+            self.image = hd.with_alpha(self.image, 255)
 
 
 # 用于描述毁灭菇的坑
@@ -2003,11 +2003,11 @@ class GraveBuster(Plant):
         self.mask = hd.mask_from_surface(self.image)
 
         if self.current_time - self.highlight_time < 100:
-            self.image.set_alpha(150)
+            self.image = hd.with_alpha(self.image, 150)
         elif (self.current_time - self.hit_timer) < 200:
-            self.image.set_alpha(192)
+            self.image = hd.with_alpha(self.image, 192)
         else:
-            self.image.set_alpha(255)
+            self.image = hd.with_alpha(self.image, 255)
 
 
 class FumeShroom(Plant):
@@ -2088,11 +2088,11 @@ class FumeShroom(Plant):
         self.mask = hd.mask_from_surface(self.image)
 
         if self.current_time - self.highlight_time < 100:
-            self.image.set_alpha(150)
+            self.image = hd.with_alpha(self.image, 150)
         elif (self.current_time - self.hit_timer) < 200:
-            self.image.set_alpha(192)
+            self.image = hd.with_alpha(self.image, 192)
         else:
-            self.image.set_alpha(255)
+            self.image = hd.with_alpha(self.image, 255)
 
 
 class IceFrozenPlot(Plant):

@@ -337,7 +337,7 @@ class Zombie(pg.sprite.Sprite):
 
     def animation(self):
         if self.state == c.FREEZE:
-            self.image.set_alpha(192)
+            self.image = hd.with_alpha(self.image, 192)
             return
 
         if (self.current_time - self.animate_timer) > (
@@ -356,9 +356,9 @@ class Zombie(pg.sprite.Sprite):
             self.image = hd.flip(self.image, True, False)
         self.mask = hd.mask_from_surface(self.image)
         if (self.current_time - self.hit_timer) >= 200:
-            self.image.set_alpha(255)
+            self.image = hd.with_alpha(self.image, 255)
         else:
-            self.image.set_alpha(192)
+            self.image = hd.with_alpha(self.image, 192)
 
     def getTimeRatio(self):
         return (
@@ -861,7 +861,7 @@ class NewspaperZombie(Zombie):
 
     def animation(self):
         if self.state == c.FREEZE:
-            self.image.set_alpha(192)
+            self.image = hd.with_alpha(self.image, 192)
             return
 
         if (self.current_time - self.animate_timer) > (
@@ -890,9 +890,9 @@ class NewspaperZombie(Zombie):
             self.image = hd.flip(self.image, True, False)
         self.mask = hd.mask_from_surface(self.image)
         if (self.current_time - self.hit_timer) >= 200:
-            self.image.set_alpha(255)
+            self.image = hd.with_alpha(self.image, 255)
         else:
-            self.image.set_alpha(192)
+            self.image = hd.with_alpha(self.image, 192)
 
 
 class FootballZombie(Zombie):
@@ -1266,7 +1266,7 @@ class PoleVaultingZombie(Zombie):
 
     def animation(self):
         if self.state == c.FREEZE:
-            self.image.set_alpha(192)
+            self.image = hd.with_alpha(self.image, 192)
             return
 
         if (self.current_time - self.animate_timer) > (
@@ -1297,9 +1297,9 @@ class PoleVaultingZombie(Zombie):
             self.image = hd.flip(self.image, True, False)
         self.mask = hd.mask_from_surface(self.image)
         if (self.current_time - self.hit_timer) >= 200:
-            self.image.set_alpha(255)
+            self.image = hd.with_alpha(self.image, 255)
         else:
-            self.image.set_alpha(192)
+            self.image = hd.with_alpha(self.image, 192)
 
     def setWalk(self):
         self.state = c.WALK
@@ -1534,7 +1534,7 @@ class SnorkelZombie(Zombie):
 
     def animation(self):
         if self.state == c.FREEZE:
-            self.image.set_alpha(192)
+            self.image = hd.with_alpha(self.image, 192)
             return
 
         if (self.current_time - self.animate_timer) > (
@@ -1564,9 +1564,9 @@ class SnorkelZombie(Zombie):
         self.mask = hd.mask_from_surface(self.image)
 
         if (self.current_time - self.hit_timer) >= 200:
-            self.image.set_alpha(255)
+            self.image = hd.with_alpha(self.image, 255)
         else:
-            self.image.set_alpha(192)
+            self.image = hd.with_alpha(self.image, 192)
 
     # 注意潜水僵尸较为特殊：这里的setAttack并没有直接触发攻击状态，而是触发从水面浮起
     def setAttack(self, prey, is_plant=True):

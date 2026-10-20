@@ -107,7 +107,6 @@ class Level(tool.State):
         self.background = tool.GFX[c.BACKGROUND_NAME][img_index]
         self.bg_rect = self.background.get_rect()
 
-        self.level = hd.Surface((self.bg_rect.w, self.bg_rect.h)).convert()
         self.viewport = tool.SCREEN.get_rect(bottom=self.bg_rect.bottom)
         self.viewport.x += c.BACKGROUND_OFFSET_X
 
@@ -2226,8 +2225,7 @@ class Level(tool.State):
         )
 
     def draw(self, surface):
-        self.level.blit(self.background, self.viewport, self.viewport)
-        surface.blit(self.level, (0, 0), self.viewport)
+        surface.blit(self.background, (0, 0), self.viewport)
         if self.state == c.CHOOSE:
             self.panel.draw(surface)
             # 画小菜单

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import logging
 import os
+import weakref
 from typing import Iterable, Sequence
 
 import pygame as pg
@@ -155,19 +156,82 @@ def scale(surface: HDSurface, size: tuple[int, int]) -> HDSurface:
     return HDSurface(pg.transform.smoothscale(surface.hd, hd_size))
 
 
+# Animation frames are immutable once loaded, so per-frame derived data
+# (collision masks, mirrored frames) is cached per source surface instead of
+# being recomputed for every sprite on every tick.
+_flip_cache: weakref.WeakKeyDictionary[
+    pg.Surface, dict[tuple[bool, bool], HDSurface]
+] = weakref.WeakKeyDictionary()
+_mask_cache: weakref.WeakKeyDictionary[
+    pg.Surface, dict[int, pg.Mask]
+] = weakref.WeakKeyDictionary()
+
+
 def flip(surface: HDSurface, flip_x: bool, flip_y: bool) -> HDSurface:
-    return HDSurface(pg.transform.flip(surface.hd, flip_x, flip_y))
+    variants = _flip_cache.setdefault(surface.hd, {})
+    key = (bool(flip_x), bool(flip_y))
+    flipped = variants.get(key)
+    if flipped is None:
+        flipped = HDSurface(pg.transform.flip(surface.hd, flip_x, flip_y))
+        variants[key] = flipped
+    return flipped
 
 
 def rotate(surface: HDSurface, angle: float) -> HDSurface:
     return HDSurface(pg.transform.rotate(surface.hd, angle))
 
 
+# Fading variants keyed by base surface, and each variant's base, so that
+# re-fading an already faded image never compounds the alpha.
+_alpha_cache: weakref.WeakKeyDictionary[
+    pg.Surface, dict[int, HDSurface]
+] = weakref.WeakKeyDictionary()
+_alpha_base: weakref.WeakKeyDictionary[
+    pg.Surface, weakref.ref[pg.Surface]
+] = weakref.WeakKeyDictionary()
+
+
+def with_alpha(surface: HDSurface, alpha: int) -> HDSurface:
+    """Return a translucent variant of ``surface`` without mutating it.
+
+    ``Surface.set_alpha`` on a per-pixel-alpha image forces SDL's slow
+    modulated blit (~5x slower), and mutates frames shared by every sprite.
+    Instead the alpha is baked into a cached copy, which blits on the fast
+    path.
+    """
+    base_ref = _alpha_base.get(surface.hd)
+    base_hd = base_ref() if base_ref is not None else None
+    if base_hd is None:
+        base_hd = surface.hd
+    if alpha >= 255:
+        return surface if base_hd is surface.hd else HDSurface(base_hd)
+
+    variants = _alpha_cache.setdefault(base_hd, {})
+    faded = variants.get(alpha)
+    if faded is None:
+        hd_copy = base_hd.copy()
+        if hd_copy.get_flags() & pg.SRCALPHA:
+            hd_copy.fill(
+                (255, 255, 255, alpha), special_flags=pg.BLEND_RGBA_MULT
+            )
+        else:   # colorkey / opaque image: plain surface alpha is cheap here
+            hd_copy.set_alpha(alpha)
+        faded = HDSurface(hd_copy)
+        variants[alpha] = faded
+        _alpha_base[hd_copy] = weakref.ref(base_hd)
+    return faded
+
+
 def mask_from_surface(surface: HDSurface, threshold: int = 127) -> pg.Mask:
-    """Collision mask in logical resolution."""
-    w, h = surface.get_size()
-    logical = pg.transform.scale(surface.hd, (max(1, w), max(1, h)))
-    return pg.mask.from_surface(logical, threshold)
+    """Collision mask in logical resolution (cached per source surface)."""
+    masks = _mask_cache.setdefault(surface.hd, {})
+    mask = masks.get(threshold)
+    if mask is None:
+        w, h = surface.get_size()
+        logical = pg.transform.scale(surface.hd, (max(1, w), max(1, h)))
+        mask = pg.mask.from_surface(logical, threshold)
+        masks[threshold] = mask
+    return mask
 
 
 def draw_rect(
