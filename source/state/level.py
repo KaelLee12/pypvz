@@ -6,6 +6,7 @@ import pygame as pg
 
 from .. import constants as c
 from .. import hd
+from .. import music
 from .. import tool
 from ..component import map, menubar, plant, sun_options, zombie
 
@@ -482,12 +483,12 @@ class Level(tool.State):
         )
 
         # 播放选卡音乐
-        pg.mixer.music.stop()
+        music.stop()
         pg.mixer.music.load(
             os.path.join(c.PATH_MUSIC_DIR, 'chooseYourSeeds.opus')
         )
         pg.mixer.music.play(-1, 0)
-        pg.mixer.music.set_volume(self.game_info[c.SOUND_VOLUME])
+        music.set_volume(self.game_info[c.SOUND_VOLUME])
 
     def choose(self, mouse_pos, mouse_click):
         # 如果暂停
@@ -506,10 +507,10 @@ class Level(tool.State):
     def initPlay(self, card_list):
 
         # 播放bgm
-        pg.mixer.music.stop()
+        music.stop()
         pg.mixer.music.load(os.path.join(c.PATH_MUSIC_DIR, self.bgm))
         pg.mixer.music.play(-1, 0)
-        pg.mixer.music.set_volume(self.game_info[c.SOUND_VOLUME])
+        music.set_volume(self.game_info[c.SOUND_VOLUME])
 
         self.state = c.PLAY
         if self.bar_type == c.CHOOSEBAR_STATIC:
@@ -706,12 +707,10 @@ class Level(tool.State):
         ) = 284
 
     def pauseAndCheckMenuOptions(self, mouse_pos, mouse_click):
-        # 只在进入暂停的那一帧暂停音乐。music.pause() 持有 GIL 去抢 SDL 音频锁，
-        # 而音效播完时音频线程持有音频锁回调 Python 要 GIL；每帧调用会让两者
-        # 互锁，表现为在菜单里点按钮（播放点击音效）后整个游戏卡死
+        # 只在进入暂停的那一帧暂停音乐（music 模块已绕开 GIL/音频锁死锁，见 source/music.py）
         if not self.pause:
             self.pause = True
-            pg.mixer.music.pause()
+            music.pause()
         if mouse_click[0]:
             # 返回键
             if self.inArea(self.return_button_rect, *mouse_pos):
@@ -719,7 +718,7 @@ class Level(tool.State):
                 self.pause = False
                 self.show_game_menu = False
                 # 继续播放音乐
-                pg.mixer.music.unpause()
+                music.unpause()
                 # 播放点击音效
                 c.SOUND_BUTTON_CLICK.play()
             # 重新开始键
@@ -741,8 +740,8 @@ class Level(tool.State):
                 self.game_info[c.SOUND_VOLUME] = round(
                     min(self.game_info[c.SOUND_VOLUME] + 0.05, 1), 2
                 )
-                # 一般不会有人想把音乐和音效分开设置，故pg.mixer.Sound.set_volume()和pg.mixer.music.set_volume()需要一起用
-                pg.mixer.music.set_volume(self.game_info[c.SOUND_VOLUME])
+                # 一般不会有人想把音乐和音效分开设置，故pg.mixer.Sound.set_volume()和music.set_volume()需要一起用
+                music.set_volume(self.game_info[c.SOUND_VOLUME])
                 for i in c.SOUNDS:
                     i.set_volume(self.game_info[c.SOUND_VOLUME])
                 c.SOUND_BUTTON_CLICK.play()
@@ -769,8 +768,8 @@ class Level(tool.State):
                 self.game_info[c.SOUND_VOLUME] = round(
                     max(self.game_info[c.SOUND_VOLUME] - 0.05, 0), 2
                 )
-                # 一般不会有人想把音乐和音效分开设置，故pg.mixer.Sound.set_volume()和pg.mixer.music.set_volume()需要一起用
-                pg.mixer.music.set_volume(self.game_info[c.SOUND_VOLUME])
+                # 一般不会有人想把音乐和音效分开设置，故pg.mixer.Sound.set_volume()和music.set_volume()需要一起用
+                music.set_volume(self.game_info[c.SOUND_VOLUME])
                 for i in c.SOUNDS:
                     i.set_volume(self.game_info[c.SOUND_VOLUME])
                 c.SOUND_BUTTON_CLICK.play()

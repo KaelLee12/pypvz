@@ -4,6 +4,7 @@ import pygame as pg
 
 from .. import constants as c
 from .. import hd
+from .. import music
 from .. import tool
 from ..component import sun_options
 
@@ -20,11 +21,11 @@ class Menu(tool.State):
         self.setupOptions()
         self.setupOptionMenu()
         self.setupSunflowerTrophy()
-        pg.mixer.music.stop()
+        music.stop()
         pg.mixer.music.load(os.path.join(c.PATH_MUSIC_DIR, 'intro.opus'))
         pg.mixer.music.play(-1, 0)
         tool.DISPLAY.set_caption(c.ORIGINAL_CAPTION)
-        pg.mixer.music.set_volume(self.game_info[c.SOUND_VOLUME])
+        music.set_volume(self.game_info[c.SOUND_VOLUME])
         for i in c.SOUNDS:
             i.set_volume(self.game_info[c.SOUND_VOLUME])
 
@@ -163,7 +164,7 @@ class Menu(tool.State):
         self.adventure_timer = self.adventure_start = self.current_time
         self.persist[c.GAME_MODE] = c.MODE_ADVENTURE
         # 播放进入音效
-        pg.mixer.music.stop()
+        music.stop()
         c.SOUND_EVILLAUGH.play()
         c.SOUND_LOSE.play()
 
@@ -364,8 +365,8 @@ class Menu(tool.State):
                     self.game_info[c.SOUND_VOLUME] = round(
                         min(self.game_info[c.SOUND_VOLUME] + 0.05, 1), 2
                     )
-                    # 一般不会有人想把音乐和音效分开设置，故pg.mixer.Sound.set_volume()和pg.mixer.music.set_volume()需要一起用
-                    pg.mixer.music.set_volume(self.game_info[c.SOUND_VOLUME])
+                    # 一般不会有人想把音乐和音效分开设置，故pg.mixer.Sound.set_volume()和music.set_volume()需要一起用
+                    music.set_volume(self.game_info[c.SOUND_VOLUME])
                     for i in c.SOUNDS:
                         i.set_volume(self.game_info[c.SOUND_VOLUME])
                     c.SOUND_BUTTON_CLICK.play()
@@ -377,8 +378,8 @@ class Menu(tool.State):
                     self.game_info[c.SOUND_VOLUME] = round(
                         max(self.game_info[c.SOUND_VOLUME] - 0.05, 0), 2
                     )
-                    # 一般不会有人想把音乐和音效分开设置，故pg.mixer.Sound.set_volume()和pg.mixer.music.set_volume()需要一起用
-                    pg.mixer.music.set_volume(self.game_info[c.SOUND_VOLUME])
+                    # 一般不会有人想把音乐和音效分开设置，故pg.mixer.Sound.set_volume()和music.set_volume()需要一起用
+                    music.set_volume(self.game_info[c.SOUND_VOLUME])
                     for i in c.SOUNDS:
                         i.set_volume(self.game_info[c.SOUND_VOLUME])
                     c.SOUND_BUTTON_CLICK.play()

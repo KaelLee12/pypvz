@@ -5,6 +5,7 @@ import pygame as pg
 
 from .. import constants as c
 from .. import hd
+from .. import music
 from .. import tool
 
 
@@ -93,10 +94,10 @@ class GameVictoryScreen(Screen):
         self.game_info = persist
         self.setupImage(self.image_name)
         tool.DISPLAY.set_caption('pypvz: 战斗胜利！')
-        pg.mixer.music.stop()
+        music.stop()
         pg.mixer.music.load(os.path.join(c.PATH_MUSIC_DIR, 'zenGarden.opus'))
         pg.mixer.music.play(-1, 0)
-        pg.mixer.music.set_volume(self.game_info[c.SOUND_VOLUME])
+        music.set_volume(self.game_info[c.SOUND_VOLUME])
 
 
 class GameLoseScreen(Screen):
@@ -111,7 +112,7 @@ class GameLoseScreen(Screen):
         self.setupImage(self.image_name, (-118, -40, 800, 600), c.WHITE)
         tool.DISPLAY.set_caption('pypvz: 战斗失败！')
         # 停止播放原来关卡中的音乐
-        pg.mixer.music.stop()
+        music.stop()
 
 
 class AwardScreen(tool.State):
@@ -251,10 +252,10 @@ class AwardScreen(tool.State):
             self.show_only_one_option = True
         self.setupImage()
         tool.DISPLAY.set_caption('pypvz: 您获得了新的战利品！')
-        pg.mixer.music.stop()
+        music.stop()
         pg.mixer.music.load(os.path.join(c.PATH_MUSIC_DIR, 'zenGarden.opus'))
         pg.mixer.music.play(-1, 0)
-        pg.mixer.music.set_volume(self.game_info[c.SOUND_VOLUME])
+        music.set_volume(self.game_info[c.SOUND_VOLUME])
 
     def update(self, surface, current_time, mouse_pos, mouse_click):
         surface.blit(self.image, self.rect)
@@ -279,7 +280,7 @@ class HelpScreen(tool.State):
         self.game_info = persist
         self.setupImage()
         tool.DISPLAY.set_caption('pypvz: 帮助')
-        pg.mixer.music.stop()
+        music.stop()
         c.SOUND_HELP_SCREEN.play()
 
     def setupImage(self):
